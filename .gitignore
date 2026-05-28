@@ -1,0 +1,8 @@
+.env
+/env-config.js
+node_modules/
+.vercel/
+.netlify/
+dist/
+build/
+*.log

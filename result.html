@@ -1,0 +1,321 @@
+<!-- result.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>
+    StudyMind AI
+  </title>
+
+  <!-- CSS -->
+  <link
+    rel="stylesheet"
+    href="style.css"
+  />
+
+  <!-- FONT AWESOME -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+
+  <!-- PDF JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <!-- JSPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</head>
+
+<body class="result-page">
+
+
+
+  <!-- =========================
+       SIDEBAR
+  ========================== -->
+
+  <aside class="sidebar">
+
+    <div>
+
+      <!-- LOGO -->
+      <div class="sidebar-logo">
+
+        StudyMind AI
+
+      </div>
+
+
+
+      <!-- NEW TOPIC -->
+      <button
+        id="newTopicBtn"
+        class="new-topic-btn"
+      >
+
+        <i class="fa-solid fa-plus"></i>
+
+        New Topic
+
+      </button>
+
+
+
+      <!-- RECENTS -->
+      <div class="recent-section">
+
+        <div class="recent-header">
+          <h3>
+            Recent Topics
+          </h3>
+
+          <div class="recent-scroll-buttons">
+            <button
+              id="recentScrollUp"
+              class="recent-scroll-btn"
+              type="button"
+              title="Scroll up"
+            >
+              <i class="fa-solid fa-chevron-up"></i>
+            </button>
+
+            <button
+              id="recentScrollDown"
+              class="recent-scroll-btn"
+              type="button"
+              title="Scroll down"
+            >
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="recent-list"
+          id="recentList"
+        >
+          <div class="recent-empty">
+            No history yet.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </aside>
+
+  <div
+    id="sidebarOverlay"
+    class="sidebar-overlay"
+  ></div>
+
+
+
+
+  <!-- =========================
+       MAIN APP
+  ========================== -->
+
+  <main class="main-app">
+
+
+
+    <!-- =========================
+         TOPBAR
+    ========================== -->
+
+    <header class="topbar">
+
+      <div class="topbar-left">
+
+        <button
+          id="mobileSidebarToggle"
+          class="mobile-sidebar-toggle"
+          type="button"
+          aria-label="Open recent topics"
+        >
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        AI Study Assistant
+
+      </div>
+
+
+
+      <div class="topbar-right">
+
+
+
+        <!-- DOWNLOAD -->
+        <button
+          id="downloadBtn"
+          class="top-btn"
+        >
+
+          <i class="fa-solid fa-download"></i>
+
+        </button>
+
+
+
+        <!-- THEME -->
+        <button
+          id="themeToggle"
+          class="top-btn"
+        >
+
+          <i class="fa-solid fa-moon"></i>
+
+        </button>
+        <!-- PROFILE -->
+        <div
+          id="profileBox"
+          class="profile-box"
+        >
+          <div
+            id="profileAvatar"
+            class="profile-avatar"
+          >
+            G
+          </div>
+
+          <div class="profile-info">
+            <span id="profileName">
+              Guest
+            </span>
+
+            <small id="profileEmail">
+              Free mode
+            </small>
+          </div>
+        </div>
+
+      </div>
+
+    </header>
+
+
+
+
+    <!-- =========================
+         CHAT AREA
+    ========================== -->
+
+    <section class="chat-area">
+      <div class="chat-content">
+
+        <!-- AI THINKING -->
+        <div id="loadingText" class="thinking-box">
+
+          <div class="thinking-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <p>
+            AI is thinking...
+          </p>
+
+        </div>
+
+        <!-- RESULT -->
+        <div id="resultBox"></div>
+
+      </div>
+    </section>
+
+
+
+    <!-- =========================
+         INPUT AREA
+    ========================== -->
+
+    <section class="input-section">
+
+      <div class="input-container">
+
+        <label class="upload-btn">
+          <i class="fa-solid fa-plus"></i>
+          <span class="tooltip-text">
+            Upload PDF
+          </span>
+          <input
+            type="file"
+            id="fileInput"
+            hidden
+          />
+        </label>
+
+        <span id="fileName" class="file-name"></span>
+
+        <!-- TEXTAREA -->
+        <textarea
+          id="notes"
+          placeholder="Ask anything or paste study material..."
+        ></textarea>
+
+        <!-- BOTTOM -->
+        <div class="input-bottom">
+
+          <!-- LANGUAGE -->
+          <select id="language">
+
+            <option value="English">
+              English
+            </option>
+
+            <option value="Hindi">
+              Hindi
+            </option>
+
+            <option value="Nepali">
+              Nepali
+            </option>
+
+          </select>
+
+          <!-- SEND BUTTON -->
+          <button
+            id="explainBtn"
+            class="send-btn"
+          >
+
+            <i class="fa-solid fa-paper-plane"></i>
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+
+  <!-- ENV CONFIG -->
+  <script src="env-config.js"></script>
+
+  <!-- FIREBASE -->
+  <script src="firebase.js"></script>
+
+  <!-- SCRIPT -->
+  <script src="script.js"></script>
+
+</body>
+
+</html>

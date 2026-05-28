@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Login | StudyMind AI</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+</head>
+
+<body class="auth-page">
+  <nav>
+    <div class="logo">
+      StudyMind AI
+    </div>
+
+    <ul class="nav-links">
+      <li>
+        <a href="index.html">
+          Home
+        </a>
+      </li>
+
+      <li>
+        <a href="index.html#features">
+          Features
+        </a>
+      </li>
+
+      <li>
+        <a href="login.html">
+          Login/Register
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <main class="auth-main">
+    <section class="auth-panel">
+      <div class="auth-copy">
+        <span class="auth-kicker">
+          Welcome back
+        </span>
+
+        <h1>
+          Continue learning with StudyMind AI
+        </h1>
+
+        <p>
+          Login or create an account to save your study progress and access your learning workspace.
+        </p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button
+            class="auth-tab active"
+            id="loginTab"
+            type="button"
+          >
+            Login
+          </button>
+
+          <button
+            class="auth-tab"
+            id="registerTab"
+            type="button"
+          >
+            Register
+          </button>
+        </div>
+
+        <form id="authForm">
+          <div
+            class="form-group register-only"
+            id="nameGroup"
+          >
+            <label for="userName">
+              Full Name
+            </label>
+
+            <input
+              id="userName"
+              type="text"
+              placeholder="Enter your name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="userEmail">
+              Gmail / Email
+            </label>
+
+            <input
+              id="userEmail"
+              type="email"
+              placeholder="example@gmail.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="userPassword">
+              Password
+            </label>
+
+            <input
+              id="userPassword"
+              type="password"
+              placeholder="Enter password"
+              minlength="6"
+              required
+            />
+          </div>
+
+          <button
+            class="auth-submit"
+            id="authSubmit"
+            type="submit"
+          >
+            Login
+          </button>
+        </form>
+
+        <div class="auth-divider">
+          <span></span>
+          <p>or</p>
+          <span></span>
+        </div>
+
+        <button
+          class="google-btn"
+          id="googleLogin"
+          type="button"
+        >
+          <i class="fa-brands fa-google"></i>
+          Continue with Google
+        </button>
+
+        <p
+          class="auth-message"
+          id="authMessage"
+        ></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="env-config.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signInWithPopup,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig =
+      window.STUDYMIND_CONFIG &&
+      window.STUDYMIND_CONFIG.firebase;
+
+    if (!firebaseConfig || !firebaseConfig.apiKey) {
+      throw new Error("Firebase config is missing. Create env-config.js from .env.");
+    }
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const loginTab = document.getElementById("loginTab");
+    const registerTab = document.getElementById("registerTab");
+    const authForm = document.getElementById("authForm");
+    const authSubmit = document.getElementById("authSubmit");
+    const authMessage = document.getElementById("authMessage");
+    const nameGroup = document.getElementById("nameGroup");
+    const userName = document.getElementById("userName");
+    const userEmail = document.getElementById("userEmail");
+    const userPassword = document.getElementById("userPassword");
+    const googleLogin = document.getElementById("googleLogin");
+
+    let authMode = "login";
+
+    function setMode(mode) {
+      authMode = mode;
+      const isRegister = mode === "register";
+
+      loginTab.classList.toggle("active", !isRegister);
+      registerTab.classList.toggle("active", isRegister);
+      nameGroup.style.display = isRegister ? "block" : "none";
+      userName.required = isRegister;
+      authSubmit.textContent = isRegister ? "Create Account" : "Login";
+      authMessage.textContent = "";
+    }
+
+    function showMessage(message, type) {
+      authMessage.textContent = message;
+      authMessage.className = `auth-message ${type}`;
+    }
+
+    function goToApp(user) {
+      localStorage.setItem("studyMindUser", JSON.stringify({
+        uid: user.uid,
+        name: user.displayName || "",
+        email: user.email
+      }));
+
+      window.location.href = "result.html";
+    }
+
+    async function saveUserProfile(user) {
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          uid: user.uid,
+          name: user.displayName || userName.value.trim() || "",
+          email: user.email,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    async function trySaveUserProfile(user) {
+      try {
+        await saveUserProfile(user);
+      } catch (error) {
+        console.warn("Profile was not saved. Check Firestore rules.", error);
+      }
+    }
+
+    loginTab.addEventListener("click", function() {
+      setMode("login");
+    });
+
+    registerTab.addEventListener("click", function() {
+      setMode("register");
+    });
+
+    authForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      authSubmit.disabled = true;
+      showMessage("Please wait...", "info");
+
+      try {
+        if (authMode === "register") {
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            userEmail.value.trim(),
+            userPassword.value
+          );
+
+          if (userName.value.trim() !== "") {
+            await updateProfile(userCredential.user, {
+              displayName: userName.value.trim()
+            });
+          }
+
+          await trySaveUserProfile(userCredential.user);
+          goToApp(userCredential.user);
+          return;
+        }
+
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          userEmail.value.trim(),
+          userPassword.value
+        );
+
+        await trySaveUserProfile(userCredential.user);
+        goToApp(userCredential.user);
+      } catch (error) {
+        showMessage(error.message.replace("Firebase: ", ""), "error");
+      } finally {
+        authSubmit.disabled = false;
+      }
+    });
+
+    googleLogin.addEventListener("click", async function() {
+      googleLogin.disabled = true;
+      showMessage("Opening Google sign in...", "info");
+
+      try {
+        const userCredential = await signInWithPopup(auth, provider);
+        await trySaveUserProfile(userCredential.user);
+        goToApp(userCredential.user);
+      } catch (error) {
+        showMessage(error.message.replace("Firebase: ", ""), "error");
+      } finally {
+        googleLogin.disabled = false;
+      }
+    });
+
+    setMode("login");
+  </script>
+</body>
+
+</html>

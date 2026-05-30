@@ -5,7 +5,14 @@ const path = require("path");
 const rootDir = __dirname;
 
 loadEnv();
-writeEnvConfig();
+
+if(
+  !process.env.VERCEL
+){
+
+  writeEnvConfig();
+
+}
 
 const mimeTypes = {
   ".css": "text/css",
@@ -65,9 +72,17 @@ const server = http.createServer(async function(req, res){
   });
 });
 
-server.listen(process.env.PORT || 5500, function(){
-  console.log(`StudyMind AI running on http://localhost:${process.env.PORT || 5500}`);
-});
+if(
+  require.main === module
+){
+
+  server.listen(process.env.PORT || 5500, function(){
+    console.log(`StudyMind AI running on http://localhost:${process.env.PORT || 5500}`);
+  });
+
+}
+
+module.exports = server;
 
 async function handleGroq(req, res) {
   const apiKey = process.env.GROQ_API_KEY;

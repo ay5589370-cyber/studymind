@@ -31,7 +31,7 @@ For Vercel deployment from a public GitHub repository, add these Environment Var
 - `GROQ_MODEL`
 
 The frontend calls `/api/groq`, so the Groq key stays on the server.
-`env-config.js` is generated from environment variables locally and served by `/api/env-config` in Vercel.
+`env-config.js` is generated at build time from Vercel environment variables.
 
 Recommended Vercel project settings:
 

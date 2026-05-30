@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node -e \"console.log('No build step required')\"",
-    "start": "node local-server.js"
+    "build": "node build.js",
+    "local": "node local-server.js"
   },
   "engines": {
     "node": ">=18"

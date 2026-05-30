@@ -9,7 +9,7 @@ Static frontend with Firebase Auth/Firestore and a server-side Groq API proxy.
 3. Run:
 
 ```bash
-npm start
+npm run local
 ```
 
 4. Open `http://localhost:5500`.

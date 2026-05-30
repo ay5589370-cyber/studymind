@@ -2,10 +2,10 @@
 .env
 .env.local
 .env.*
+!.env.example
 
 # Config files with keys
-env-config.js
-api/env-config.js
+/env-config.js
 
 # Dependencies
 node_modules/
@@ -17,6 +17,7 @@ node_modules/
 # Build
 dist/
 build/
+public/
 
 # Logs
 *.log

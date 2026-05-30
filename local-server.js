@@ -5,14 +5,7 @@ const path = require("path");
 const rootDir = __dirname;
 
 loadEnv();
-
-if(
-  !process.env.VERCEL
-){
-
-  writeEnvConfig();
-
-}
+writeEnvConfig();
 
 const mimeTypes = {
   ".css": "text/css",
@@ -31,7 +24,6 @@ const server = http.createServer(async function(req, res){
     return;
   }
 
-  // Handle CORS preflight for API routes
   if (req.method === "OPTIONS" && req.url.startsWith("/api/")) {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
@@ -72,17 +64,9 @@ const server = http.createServer(async function(req, res){
   });
 });
 
-if(
-  require.main === module
-){
-
-  server.listen(process.env.PORT || 5500, function(){
-    console.log(`StudyMind AI running on http://localhost:${process.env.PORT || 5500}`);
-  });
-
-}
-
-module.exports = server;
+server.listen(process.env.PORT || 5500, function(){
+  console.log(`StudyMind AI running on http://localhost:${process.env.PORT || 5500}`);
+});
 
 async function handleGroq(req, res) {
   const apiKey = process.env.GROQ_API_KEY;
@@ -133,32 +117,18 @@ function readJson(req) {
 }
 
 function sendJson(res, status, data) {
-  const headers = {
+  res.writeHead(status, {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
-  };
-
-  res.writeHead(status, headers);
+  });
   res.end(JSON.stringify(data));
 }
 
 function handleEnvConfig(req, res) {
-  const config = {
-    firebase: {
-      apiKey: process.env.FIREBASE_API_KEY || "",
-      authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",
-      projectId: process.env.FIREBASE_PROJECT_ID || "",
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "",
-      messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "",
-      appId: process.env.FIREBASE_APP_ID || "",
-      measurementId: process.env.FIREBASE_MEASUREMENT_ID || ""
-    }
-  };
-
   res.writeHead(200, { "Content-Type": "text/javascript" });
-  res.end(`window.STUDYMIND_CONFIG = ${JSON.stringify(config)};`);
+  res.end(`window.STUDYMIND_CONFIG = ${JSON.stringify(getClientConfig())};`);
 }
 
 function loadEnv() {
@@ -186,7 +156,14 @@ function loadEnv() {
 }
 
 function writeEnvConfig() {
-  const config = {
+  fs.writeFileSync(
+    path.join(rootDir, "env-config.js"),
+    `window.STUDYMIND_CONFIG = ${JSON.stringify(getClientConfig(), null, 2)};\n`
+  );
+}
+
+function getClientConfig() {
+  return {
     firebase: {
       apiKey: process.env.FIREBASE_API_KEY || "",
       authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",
@@ -195,11 +172,8 @@ function writeEnvConfig() {
       messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "",
       appId: process.env.FIREBASE_APP_ID || "",
       measurementId: process.env.FIREBASE_MEASUREMENT_ID || ""
-    }
+    },
+    groqApiKey: process.env.GROQ_API_KEY || "",
+    groqModel: process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
   };
-
-  fs.writeFileSync(
-    path.join(rootDir, "env-config.js"),
-    `window.STUDYMIND_CONFIG = ${JSON.stringify(config, null, 2)};\n`
-  );
 }

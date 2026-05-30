@@ -20,6 +20,11 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const requestBody =
+      typeof req.body === "string"
+        ? JSON.parse(req.body || "{}")
+        : req.body || {};
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -29,7 +34,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
         stream: false,
-        messages: req.body.messages || []
+        messages: requestBody.messages || []
       })
     });
 

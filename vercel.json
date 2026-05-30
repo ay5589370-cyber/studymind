@@ -1,8 +1,18 @@
 {
+  "version": 2,
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/env-config.js",
       "destination": "/api/env-config"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
     }
   ]
 }

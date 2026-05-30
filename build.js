@@ -10,6 +10,7 @@ const files = [
   "result.html",
   "style.css",
   "script.js",
+  "login.js",
   "firebase.js",
   "env-config.example.js"
 ];

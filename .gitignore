@@ -1,8 +1,24 @@
+# Secrets
 .env
-/env-config.js
+.env.local
+.env.*
+
+# Config files with keys
+env-config.js
+api/env-config.js
+
+# Dependencies
 node_modules/
+
+# Deployment
 .vercel/
 .netlify/
+
+# Build
 dist/
 build/
+
+# Logs
 *.log
+server.out.log
+server.err.log

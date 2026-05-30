@@ -8,6 +8,11 @@ module.exports = function handler(req, res) {
       messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "",
       appId: process.env.FIREBASE_APP_ID || "",
       measurementId: process.env.FIREBASE_MEASUREMENT_ID || ""
+    },
+    debug: {
+      hasFirebaseApiKey: Boolean(process.env.FIREBASE_API_KEY),
+      hasFirebaseProjectId: Boolean(process.env.FIREBASE_PROJECT_ID),
+      hasFirebaseAppId: Boolean(process.env.FIREBASE_APP_ID)
     }
   };
 

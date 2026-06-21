@@ -58,6 +58,11 @@ if(
       "downloadBtn"
     );
 
+  const voiceBtn =
+    document.getElementById(
+      "voiceBtn"
+    );
+
   const themeToggle =
     document.getElementById(
       "themeToggle"
@@ -123,6 +128,9 @@ if(
 
   let localHistory = [];
   let typingTimer = null;
+  let currentSpeech = null;
+  let speechQueue = [];
+  let speechQueueIndex = 0;
 
 
   // =========================
@@ -575,6 +583,628 @@ if(
 
   }
 
+  function getSpeechLanguage(){
+
+    const selectedLanguage =
+      languageSelect.value;
+
+    const aiExplanation =
+      localStorage.getItem(
+        "aiExplanation"
+      ) ||
+      resultBox.innerText.trim();
+
+    const hasDevanagari =
+      /[\u0900-\u097F]/.test(
+        aiExplanation
+      );
+
+    if(
+      selectedLanguage === "Hindi"
+    ){
+
+      return hasDevanagari
+      ? "hi-IN"
+      : "en-IN";
+
+    }
+
+    if(
+      selectedLanguage === "Nepali"
+    ){
+
+      return hasDevanagari
+      ? "hi-IN"
+      : "en-IN";
+
+    }
+
+    return "en-US";
+
+  }
+
+  function updateVoiceButton(
+    isSpeaking
+  ){
+
+    if(
+      !voiceBtn
+    ){
+
+      return;
+
+    }
+
+    voiceBtn.innerHTML =
+      isSpeaking
+      ? '<i class="fa-solid fa-stop"></i>'
+      : '<i class="fa-solid fa-volume-high"></i>';
+
+    voiceBtn.title =
+      isSpeaking
+      ? "Stop response"
+      : "Play response";
+
+  }
+
+  function chooseReaderVoice(
+    languageCode
+  ){
+
+    if(
+      !window.speechSynthesis
+    ){
+
+      return null;
+
+    }
+
+    const voices =
+      window.speechSynthesis.getVoices();
+
+    const languageVoices =
+      voices.filter(
+        function(voice){
+
+          return voice.lang
+            .toLowerCase()
+            .startsWith(
+              languageCode
+                .slice(0, 2)
+                .toLowerCase()
+            );
+
+        }
+      );
+
+    const indianEnglishVoices =
+      voices.filter(
+        function(voice){
+
+          return voice.lang
+            .toLowerCase() === "en-in";
+
+        }
+      );
+
+    return (
+      languageVoices.find(
+        function(voice){
+
+          const voiceName =
+            voice.name.toLowerCase();
+
+          return (
+            voiceName.includes("female") ||
+            voiceName.includes("woman") ||
+            voiceName.includes("zira") ||
+            voiceName.includes("samantha") ||
+            voiceName.includes("heera") ||
+            voiceName.includes("lekha") ||
+            voiceName.includes("google हिन्दी") ||
+            voiceName.includes("google hindi") ||
+            voiceName.includes("google indian english") ||
+            voiceName.includes("google uk english female")
+          );
+
+        }
+      ) ||
+      indianEnglishVoices.find(
+        function(voice){
+
+          const voiceName =
+            voice.name.toLowerCase();
+
+          return (
+            voiceName.includes("female") ||
+            voiceName.includes("woman") ||
+            voiceName.includes("heera") ||
+            voiceName.includes("lekha") ||
+            voiceName.includes("google")
+          );
+
+        }
+      ) ||
+      languageVoices[0] ||
+      indianEnglishVoices[0] ||
+      voices.find(
+        function(voice){
+
+          return voice.lang
+            .toLowerCase()
+            .startsWith("en");
+
+        }
+      ) ||
+      null
+    );
+
+  }
+
+  function prepareSpeechText(
+    text
+  ){
+
+    return text
+      .replace(
+        /[#*_`>]+/g,
+        ""
+      )
+      .replace(
+        /\s*[-•]\s+/g,
+        ". "
+      )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .replace(
+        /([.!?])\s+/g,
+        "$1 "
+      )
+      .trim();
+
+  }
+
+  function getSpeechRate(){
+
+    const selectedLanguage =
+      languageSelect.value;
+
+    if(
+      selectedLanguage === "Hindi" ||
+      selectedLanguage === "Nepali"
+    ){
+
+      return 0.86;
+
+    }
+
+    return 1;
+
+  }
+
+  function chooseHumanReaderVoice(
+    languageCode
+  ){
+
+    if(
+      !window.speechSynthesis
+    ){
+
+      return null;
+
+    }
+
+    const voices =
+      window.speechSynthesis.getVoices();
+
+    const preferredVoices =
+      voices.filter(
+        function(voice){
+
+          const voiceLanguage =
+            voice.lang.toLowerCase();
+
+          return (
+            voiceLanguage === languageCode.toLowerCase() ||
+            voiceLanguage === "en-in" ||
+            voiceLanguage.startsWith("en")
+          );
+
+        }
+      );
+
+    let bestVoice = null;
+    let bestScore = -1;
+
+    preferredVoices.forEach(
+      function(voice){
+
+        const voiceName =
+          voice.name.toLowerCase();
+
+        const voiceLanguage =
+          voice.lang.toLowerCase();
+
+        let score = 0;
+
+        if(
+          voiceLanguage === languageCode.toLowerCase()
+        ){
+
+          score += 20;
+
+        }
+
+        if(
+          voiceLanguage === "en-in"
+        ){
+
+          score += 18;
+
+        }
+
+        if(
+          voiceName.includes("natural") ||
+          voiceName.includes("neural") ||
+          voiceName.includes("premium") ||
+          voiceName.includes("online")
+        ){
+
+          score += 34;
+
+        }
+
+        if(
+          voiceName.includes("google") ||
+          voiceName.includes("microsoft")
+        ){
+
+          score += 14;
+
+        }
+
+        if(
+          voiceName.includes("female") ||
+          voiceName.includes("woman") ||
+          voiceName.includes("zira") ||
+          voiceName.includes("samantha") ||
+          voiceName.includes("heera") ||
+          voiceName.includes("lekha") ||
+          voiceName.includes("sonia") ||
+          voiceName.includes("aria") ||
+          voiceName.includes("jenny")
+        ){
+
+          score += 12;
+
+        }
+
+        if(
+          !voice.localService
+        ){
+
+          score += 6;
+
+        }
+
+        if(
+          score > bestScore
+        ){
+
+          bestScore = score;
+          bestVoice = voice;
+
+        }
+
+      }
+    );
+
+    return bestVoice ||
+      preferredVoices[0] ||
+      voices[0] ||
+      null;
+
+  }
+
+  function splitSpeechText(
+    text
+  ){
+
+    const cleanText =
+      prepareSpeechText(
+        text
+      )
+      .replace(
+        /\s*-\s+/g,
+        ". "
+      )
+      .replace(
+        /(\d+)\.\s+/g,
+        ". Point $1. "
+      );
+
+    const sentences =
+      cleanText.match(
+        /[^.!?]+[.!?]+|[^.!?]+$/g
+      ) || [cleanText];
+
+    const chunks = [];
+    let currentChunk = "";
+
+    sentences.forEach(
+      function(sentence){
+
+        const trimmedSentence =
+          sentence.trim();
+
+        if(
+          !trimmedSentence
+        ){
+
+          return;
+
+        }
+
+        if(
+          (
+            currentChunk + " " + trimmedSentence
+          ).trim().length > 220
+        ){
+
+          if(
+            currentChunk
+          ){
+
+            chunks.push(
+              currentChunk.trim()
+            );
+
+          }
+
+          currentChunk =
+            trimmedSentence;
+
+          return;
+
+        }
+
+        currentChunk =
+          (
+            currentChunk + " " + trimmedSentence
+          ).trim();
+
+      }
+    );
+
+    if(
+      currentChunk
+    ){
+
+      chunks.push(
+        currentChunk.trim()
+      );
+
+    }
+
+    return chunks;
+
+  }
+
+  function stopVoiceResponse(){
+
+    if(
+      window.speechSynthesis
+    ){
+
+      window.speechSynthesis.cancel();
+
+    }
+
+    currentSpeech = null;
+    speechQueue = [];
+    speechQueueIndex = 0;
+    updateVoiceButton(false);
+
+  }
+
+  function speakNextChunk(
+    languageCode,
+    readerVoice
+  ){
+
+    if(
+      speechQueueIndex >= speechQueue.length
+    ){
+
+      currentSpeech = null;
+      speechQueue = [];
+      speechQueueIndex = 0;
+      updateVoiceButton(false);
+      return;
+
+    }
+
+    const utterance =
+      new SpeechSynthesisUtterance(
+        speechQueue[speechQueueIndex]
+      );
+
+    utterance.lang =
+      languageCode;
+
+    utterance.rate =
+      getSpeechRate();
+
+    utterance.pitch =
+      languageCode === "en-IN"
+      ? 1.03
+      : 1;
+
+    utterance.volume = 1;
+
+    if(
+      readerVoice
+    ){
+
+      utterance.voice =
+        readerVoice;
+
+    }
+
+    utterance.onend =
+      function(){
+
+        speechQueueIndex += 1;
+
+        setTimeout(
+          function(){
+
+            speakNextChunk(
+              languageCode,
+              readerVoice
+            );
+
+          },
+          120
+        );
+
+      };
+
+    utterance.onerror =
+      function(){
+
+        currentSpeech = null;
+        speechQueue = [];
+        speechQueueIndex = 0;
+        updateVoiceButton(false);
+
+      };
+
+    currentSpeech =
+      utterance;
+
+    window.speechSynthesis.speak(
+      utterance
+    );
+
+  }
+
+  function playVoiceResponse(){
+
+    if(
+      !window.speechSynthesis
+    ){
+
+      alert(
+        "Voice playback is not supported in this browser."
+      );
+
+      return;
+
+    }
+
+    if(
+      window.speechSynthesis.speaking
+    ){
+
+      stopVoiceResponse();
+      return;
+
+    }
+
+    const aiExplanation =
+      localStorage.getItem(
+        "aiExplanation"
+      ) ||
+      resultBox.innerText.trim();
+
+    if(
+      !aiExplanation
+    ){
+
+      alert(
+        "Please generate an AI response first."
+      );
+
+      return;
+
+    }
+
+    const languageCode =
+      getSpeechLanguage();
+
+    const utterance =
+      new SpeechSynthesisUtterance(
+        prepareSpeechText(
+          aiExplanation
+        )
+      );
+
+    utterance.lang =
+      languageCode;
+
+    utterance.rate =
+      getSpeechRate();
+
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    const readerVoice =
+      chooseReaderVoice(
+        languageCode
+      );
+
+    if(
+      readerVoice
+    ){
+
+      utterance.voice =
+        readerVoice;
+
+    }
+
+    utterance.onend =
+      function(){
+
+        currentSpeech = null;
+        updateVoiceButton(false);
+
+      };
+
+    utterance.onerror =
+      function(){
+
+        currentSpeech = null;
+        updateVoiceButton(false);
+
+      };
+
+    currentSpeech =
+      utterance;
+
+    updateVoiceButton(true);
+
+    window.speechSynthesis.speak(
+      utterance
+    );
+
+  }
+
+  if(
+    window.speechSynthesis
+  ){
+
+    window.speechSynthesis.onvoiceschanged =
+      function(){
+
+        window.speechSynthesis.getVoices();
+
+      };
+
+  }
+
   recentScrollUp.addEventListener(
     "click",
     function(){
@@ -754,6 +1384,7 @@ fileName.innerText =
         "flex";
 
       stopTypingAnimation();
+      stopVoiceResponse();
 
       resultBox.innerText = "";
 
@@ -826,6 +1457,10 @@ IMPORTANT RULES:
 3. Never use Hindi or Nepali scripts.
 
 4. Write naturally like students chat online.
+
+5. For Hindi or Nepali, use simple Roman words that are easy for voice reading.
+
+6. Use short sentences and avoid difficult spellings.
 
 Examples:
 
@@ -903,6 +1538,10 @@ IMPORTANT RULES:
 3. Never use Hindi or Nepali scripts.
 
 4. Write naturally like students chat online.
+
+5. For Hindi or Nepali, use simple Roman words that are easy for voice reading.
+
+6. Use short sentences and avoid difficult spellings.
 
 Examples:
 
@@ -1041,6 +1680,11 @@ ${studyText.substring(0,3000)}`
   // =========================
   // DOWNLOAD PDF
   // =========================
+
+  voiceBtn.addEventListener(
+    "click",
+    playVoiceResponse
+  );
 
   downloadBtn.addEventListener(
     "click",
@@ -1221,6 +1865,7 @@ ${studyText.substring(0,3000)}`
       notesInput.value = "";
 
       stopTypingAnimation();
+      stopVoiceResponse();
 
       // CLEAR RESULT
       resultBox.innerText = "";

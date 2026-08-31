@@ -1,4 +1,4 @@
-# StudyMind AI
+# NexoraAI
 
 Static frontend with Firebase Auth/Firestore and a server-side Groq API proxy.
 

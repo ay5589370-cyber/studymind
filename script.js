@@ -43,6 +43,26 @@ if(
       "language"
     );
 
+  const languageSelectControl =
+    document.getElementById(
+      "languageSelectControl"
+    );
+
+  const languageTrigger =
+    document.getElementById(
+      "languageTrigger"
+    );
+
+  const languageSelected =
+    document.getElementById(
+      "languageSelected"
+    );
+
+  const languageMenu =
+    document.getElementById(
+      "languageMenu"
+    );
+
   const resultBox =
     document.getElementById(
       "resultBox"
@@ -209,6 +229,167 @@ if(
 
   }
 
+  function syncLanguageControl(){
+
+    if(
+      !languageSelect ||
+      !languageSelected ||
+      !languageMenu
+    ){
+
+      return;
+
+    }
+
+    const selectedValue =
+      languageSelect.value;
+
+    languageSelected.innerText =
+      selectedValue;
+
+    languageMenu
+      .querySelectorAll(
+        ".language-option"
+      )
+      .forEach(
+        function(option){
+
+          const isSelected =
+            option.dataset.value === selectedValue;
+
+          option.classList.toggle(
+            "active",
+            isSelected
+          );
+
+          option.setAttribute(
+            "aria-selected",
+            String(isSelected)
+          );
+
+        }
+      );
+
+  }
+
+  function closeLanguageMenu(){
+
+    if(
+      !languageSelectControl ||
+      !languageTrigger
+    ){
+
+      return;
+
+    }
+
+    languageSelectControl.classList.remove(
+      "open"
+    );
+
+    languageTrigger.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+  }
+
+  if(
+    languageTrigger &&
+    languageMenu &&
+    languageSelectControl
+  ){
+
+    syncLanguageControl();
+
+    languageTrigger.addEventListener(
+      "click",
+      function(){
+
+        const isOpen =
+          languageSelectControl.classList.toggle(
+            "open"
+          );
+
+        languageTrigger.setAttribute(
+          "aria-expanded",
+          String(isOpen)
+        );
+
+      }
+    );
+
+    languageMenu
+      .querySelectorAll(
+        ".language-option"
+      )
+      .forEach(
+        function(option){
+
+          option.addEventListener(
+            "click",
+            function(){
+
+              languageSelect.value =
+                option.dataset.value;
+
+              languageSelect.dispatchEvent(
+                new Event(
+                  "change",
+                  {
+                    bubbles: true
+                  }
+                )
+              );
+
+              syncLanguageControl();
+              closeLanguageMenu();
+
+            }
+          );
+
+        }
+      );
+
+    document.addEventListener(
+      "click",
+      function(event){
+
+        if(
+          !languageSelectControl.contains(
+            event.target
+          )
+        ){
+
+          closeLanguageMenu();
+
+        }
+
+      }
+    );
+
+    document.addEventListener(
+      "keydown",
+      function(event){
+
+        if(
+          event.key === "Escape"
+        ){
+
+          closeLanguageMenu();
+
+        }
+
+      }
+    );
+
+    languageSelect.addEventListener(
+      "change",
+      syncLanguageControl
+    );
+
+  }
+
   function setupStudyMindFirebase(){
 
     if(
@@ -306,6 +487,49 @@ if(
       .join(" ");
 
     return words || "Study Topic";
+
+  }
+
+  function normalizeGeneratedText(
+    value
+  ){
+
+    const text =
+      typeof value === "string"
+      ? value.trim()
+      : "";
+
+    if(
+      text === "Error: undefined" ||
+      text === "undefined"
+    ){
+
+      return "";
+
+    }
+
+    return text;
+
+  }
+
+  const storedAiExplanation =
+    localStorage.getItem(
+      "aiExplanation"
+    );
+
+  const normalizedStoredAiExplanation =
+    normalizeGeneratedText(
+      storedAiExplanation
+    );
+
+  if(
+    storedAiExplanation &&
+    !normalizedStoredAiExplanation
+  ){
+
+    localStorage.removeItem(
+      "aiExplanation"
+    );
 
   }
 
@@ -484,12 +708,17 @@ if(
             notesInput.value =
               item.input || "";
 
+            const savedResult =
+              normalizeGeneratedText(
+                item.result
+              );
+
             resultBox.innerText =
-              item.result || "";
+              savedResult;
 
             localStorage.setItem(
               "aiExplanation",
-              item.result || ""
+              savedResult
             );
 
             closeMobileSidebar();
@@ -1413,6 +1642,41 @@ fileName.innerText =
 
 
 
+  function getApiErrorMessage(
+    data,
+    status
+  ){
+
+    if(
+      typeof data?.error === "string"
+    ){
+
+      return data.error;
+
+    }
+
+    if(
+      data?.error?.message
+    ){
+
+      return data.error.message;
+
+    }
+
+    if(
+      data?.message
+    ){
+
+      return data.message;
+
+    }
+
+    return `Groq API request failed (status ${status}).`;
+
+  }
+
+
+
 // =========================
   // GROQ AI FUNCTION
   // =========================
@@ -1439,7 +1703,7 @@ fileName.innerText =
               {
                 role: "system",
                 content:
-                  "You are StudyMind AI, a friendly AI teacher who explains study material clearly for students."
+                  "You are NexoraAI, a friendly AI teacher who explains study material clearly for students."
               },
               {
                 role: "user",
@@ -1520,7 +1784,7 @@ ${studyText.substring(0,3000)}`
                   {
                     role: "system",
                     content:
-                      "You are StudyMind AI, a friendly AI teacher who explains study material clearly for students."
+                      "You are NexoraAI, a friendly AI teacher who explains study material clearly for students."
                   },
                   {
                     role: "user",
@@ -1602,6 +1866,19 @@ ${studyText.substring(0,3000)}`
         throw new Error("Invalid JSON response from Groq API.");
       }
 
+      if(
+        !response.ok
+      ){
+
+        throw new Error(
+          getApiErrorMessage(
+            data,
+            response.status
+          )
+        );
+
+      }
+
 
       // HIDE LOADING
       loadingText.style.display =
@@ -1611,7 +1888,9 @@ ${studyText.substring(0,3000)}`
       // SHOW RESULT
       if(
         data.choices &&
-        data.choices.length > 0
+        data.choices.length > 0 &&
+        data.choices[0].message &&
+        data.choices[0].message.content
       ){
 
         const aiText =
@@ -1644,7 +1923,10 @@ ${studyText.substring(0,3000)}`
 
         typeAIResponse(
           "Error: " +
-          data.error.message
+          getApiErrorMessage(
+            data,
+            response.status
+          )
         );
 
       }
@@ -1711,7 +1993,7 @@ ${studyText.substring(0,3000)}`
       let fileName =
         prompt(
           "Enter PDF file name:",
-          "StudyMind-AI"
+          "NexoraAI"
         );
 
       if(
@@ -1724,7 +2006,7 @@ ${studyText.substring(0,3000)}`
 
       fileName =
         fileName.trim() ||
-        "StudyMind-AI";
+        "NexoraAI";
 
       if(
         !fileName
@@ -1746,7 +2028,7 @@ ${studyText.substring(0,3000)}`
       doc.setFontSize(18);
 
       doc.text(
-        "StudyMind AI Explanation",
+        "NexoraAI Explanation",
         20,
         20
       );

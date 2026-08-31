@@ -41,8 +41,12 @@ const server = http.createServer(async function(req, res){
   }
 
   const requestUrl = new URL(req.url, "http://localhost");
-  const safePath = path.normalize(decodeURIComponent(requestUrl.pathname)).replace(/^(\.\.[/\\])+/, "");
-  const filePath = path.join(rootDir, safePath === "/" ? "index.html" : safePath);
+  const requestedPath = decodeURIComponent(requestUrl.pathname);
+  const safePath =
+    requestedPath === "/"
+      ? "index.html"
+      : path.normalize(requestedPath).replace(/^[/\\]+/, "").replace(/^(\.\.[/\\])+/, "");
+  const filePath = path.join(rootDir, safePath);
 
   if (!filePath.startsWith(rootDir)) {
     res.writeHead(403);
@@ -65,7 +69,7 @@ const server = http.createServer(async function(req, res){
 });
 
 server.listen(process.env.PORT || 5500, function(){
-  console.log(`StudyMind AI running on http://localhost:${process.env.PORT || 5500}`);
+  console.log(`NexoraAI running on http://localhost:${process.env.PORT || 5500}`);
 });
 
 async function handleGroq(req, res) {
@@ -94,7 +98,12 @@ async function handleGroq(req, res) {
     const data = await response.json();
     sendJson(res, response.status, data);
   } catch (error) {
-    sendJson(res, 500, { error: error.message || "Groq request failed." });
+    const message =
+      error.message === "fetch failed"
+        ? "Could not reach Groq API. Check your internet connection, firewall, or local server network access."
+        : error.message || "Groq request failed.";
+
+    sendJson(res, 500, { error: message });
   }
 }
 

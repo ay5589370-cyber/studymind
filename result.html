@@ -13,7 +13,7 @@
   />
 
   <title>
-    StudyMind AI
+    NexoraAI
   </title>
 
   <!-- CSS -->
@@ -49,9 +49,15 @@
     <div>
 
       <!-- LOGO -->
-      <div class="sidebar-logo">
+      <div class="sidebar-logo brand-logo">
 
-        StudyMind AI
+        <img
+          src="nexoralogo.png"
+          alt="NexoraAI logo"
+        />
+        <span>
+          NexoraAI
+        </span>
 
       </div>
 
@@ -285,21 +291,84 @@
         <div class="input-bottom">
 
           <!-- LANGUAGE -->
-          <select id="language">
+          <div
+            id="languageSelectControl"
+            class="language-select"
+          >
+            <i class="fa-solid fa-language"></i>
 
-            <option value="English">
-              English
-            </option>
+            <select
+              id="language"
+              class="native-language-select"
+              aria-label="Response language"
+              tabindex="-1"
+            >
 
-            <option value="Hindi">
-              Hindi
-            </option>
+              <option value="English">
+                English
+              </option>
 
-            <option value="Nepali">
-              Nepali
-            </option>
+              <option value="Hindi">
+                Hindi
+              </option>
 
-          </select>
+              <option value="Nepali">
+                Nepali
+              </option>
+
+            </select>
+
+            <button
+              id="languageTrigger"
+              class="language-trigger"
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            >
+              <span id="languageSelected">
+                English
+              </span>
+
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+
+            <div
+              id="languageMenu"
+              class="language-menu"
+              role="listbox"
+              aria-label="Choose response language"
+            >
+              <button
+                class="language-option active"
+                type="button"
+                role="option"
+                aria-selected="true"
+                data-value="English"
+              >
+                English
+              </button>
+
+              <button
+                class="language-option"
+                type="button"
+                role="option"
+                aria-selected="false"
+                data-value="Hindi"
+              >
+                Hindi
+              </button>
+
+              <button
+                class="language-option"
+                type="button"
+                role="option"
+                aria-selected="false"
+                data-value="Nepali"
+              >
+                Nepali
+              </button>
+            </div>
+          </div>
 
           <!-- SEND BUTTON -->
           <button

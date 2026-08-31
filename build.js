@@ -9,11 +9,15 @@ loadEnv();
 const files = [
   "index.html",
   "login.html",
+  "privacy.html",
   "result.html",
+  "terms.html",
   "style.css",
   "script.js",
   "login.js",
-  "firebase.js"
+  "firebase.js",
+  "nexora.png",
+  "nexoralogo.png"
 ];
 
 fs.rmSync(outputDir, {

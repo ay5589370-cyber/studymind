@@ -43,6 +43,11 @@ module.exports = async function handler(req, res) {
     res.status(response.status).json(data);
   } catch (error) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(500).json({ error: error.message || "Groq request failed." });
+    const message =
+      error.message === "fetch failed"
+        ? "Could not reach Groq API. Check the deployment network settings or try again shortly."
+        : error.message || "Groq request failed.";
+
+    res.status(500).json({ error: message });
   }
 };
